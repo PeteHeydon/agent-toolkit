@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agent-toolkit/schema/baseline-profile.schema.json",
+  "title": "Agent Toolkit Baseline Profile",
+  "description": "The canonical set of characteristics every agent in the toolkit inherits from. Lives at ~/.agent-toolkit/baseline.yaml.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "identity_context",
+    "voice_style",
+    "operating_constraints",
+    "interop"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version. Bumped when fields are added, renamed, or removed; drives migration."
+    },
+    "identity_context": {
+      "type": "object",
+      "required": [
+        "locale",
+        "domain",
+        "audience"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "locale": {
+          "type": "string",
+          "description": "BCP-47 tag, e.g. en-AU"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "audience": {
+          "type": "string",
+          "enum": [
+            "internal_team",
+            "external_client",
+            "technical",
+            "non_technical",
+            "mixed"
+          ]
+        }
+      }
+    },
+    "voice_style": {
+      "type": "object",
+      "required": [
+        "tone_of_voice",
+        "verbosity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tone_of_voice": {
+          "type": "string"
+        },
+        "persona": {
+          "type": "string",
+          "enum": [
+            "none",
+            "named"
+          ],
+          "default": "none"
+        },
+        "verbosity": {
+          "type": "string",
+          "enum": [
+            "concise",
+            "standard",
+            "expansive"
+          ],
+          "default": "concise"
+        },
+        "formatting_conventions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "headers": {
+              "type": "boolean",
+              "default": true
+            },
+            "tables": {
+              "type": "string",
+              "enum": [
+                "always",
+                "when_useful",
+                "never"
+              ],
+              "default": "when_useful"
+            },
+            "code_blocks": {
+              "type": "string",
+              "default": "fenced_with_language"
+            }
+          }
+        }
+      }
+    },
+    "operating_constraints": {
+      "type": "object",
+      "required": [
+        "model",
+        "pattern"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Default model. Mid-tier by design \u2014 agents override up only when needed."
+        },
+        "pattern": {
+          "type": "string",
+          "enum": [
+            "standalone",
+            "pipeline",
+            "router",
+            "parallel",
+            "orchestrator-workers",
+            "evaluator-optimizer",
+            "collaborative"
+          ],
+          "default": "standalone"
+        },
+        "guardrails": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "input_filtering": {
+              "type": "boolean",
+              "default": true
+            },
+            "tool_use_limits": {
+              "type": "string",
+              "enum": [
+                "default",
+                "strict",
+                "none"
+              ],
+              "default": "default"
+            },
+            "output_validation": {
+              "type": "boolean",
+              "default": false
+            },
+            "human_in_the_loop": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "evaluation_loop": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "reviewer": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            },
+            "max_cycles": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 3
+            }
+          }
+        },
+        "permissions_scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "filesystem": {
+              "type": "string",
+              "enum": [
+                "workspace_only",
+                "read_only",
+                "full"
+              ],
+              "default": "workspace_only"
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "external_calls": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "safety_compliance_profile": {
+          "type": "string",
+          "default": "default"
+        },
+        "cost_performance_budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_tokens_per_run": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "latency_target_seconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "knowledge_memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_context_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "memory_behaviour": {
+          "type": "string",
+          "enum": [
+            "stateless",
+            "persistent"
+          ],
+          "default": "stateless"
+        },
+        "context_management": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tool_output_token_cap": {
+              "type": "integer",
+              "minimum": 1000,
+              "default": 25000
+            },
+            "clear_stale_tool_calls": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "interop": {
+      "type": "object",
+      "required": [
+        "output_format_contract",
+        "output_location"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "output_format_contract": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "json",
+            "plain_text",
+            "file"
+          ],
+          "default": "markdown"
+        },
+        "output_location": {
+          "type": "string",
+          "default": "./output"
+        },
+        "escalation_path": {
+          "type": "string",
+          "default": "human_review"
+        }
+      }
+    },
+    "steering": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_mode": {
+          "type": "string",
+          "enum": [
+            "chat_and_bulk",
+            "chat_only"
+          ],
+          "default": "chat_and_bulk"
+        },
+        "bulk_feedback_file": {
+          "type": "string",
+          "default": "./steering.md"
+        }
+      }
+    },
+    "credentials": {
+      "type": "object",
+      "description": "Environment variable REFERENCES only. Never literal secret values.",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^env:[A-Z_][A-Z0-9_]*$"
+      }
+    },
+    "extends": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to a parent profile. Null/absent on the baseline itself; set on agent override files."
+    }
+  }
+}

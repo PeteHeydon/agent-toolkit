@@ -1,0 +1,117 @@
+# agent-example.yaml
+# ---------------------------------------------------------------------------
+# Annotated example of an agent override file, showing every overridable field
+# and its legal options.
+#
+# IMPORTANT: this is a REFERENCE, not a starting point. A real agent.yaml should
+# be nearly empty. Everything shown below the identity block is commented out
+# because the correct default for almost every field is: don't set it, inherit it.
+#
+# Written to:  <dest>/<agent-name>/agent.yaml
+#              default dest ~/.agent-toolkit/agents/
+#
+# Precedence:  baseline -> THIS FILE -> CLI flag -> in-session instruction
+#   - Higher wins for the field it sets, and only that field
+#   - Nested maps merge at the leaf; sibling keys survive
+#   - Arrays REPLACE wholesale, never append
+#
+# NEVER put a secret here. Use env:VAR_NAME. See docs/environment-variables.md
+# ---------------------------------------------------------------------------
+
+schema_version: 1
+
+# --- Required identity -----------------------------------------------------
+
+# What this agent inherits from. Explicit rather than assumed, so the agent is
+# self-describing and can point at a different baseline (work vs personal)
+# without any change to the resolver.
+extends: "~/.agent-toolkit/baseline.yaml"
+
+# Slug: lowercase, digits, hyphens, starting with a letter. Matches the directory.
+name: "example-agent"
+
+description: "One line on what this agent does."
+
+# ---------------------------------------------------------------------------
+# Overrides — everything below is COMMENTED OUT deliberately.
+#
+# Uncomment only what genuinely differs from your baseline. An override that
+# restates the baseline value is worse than nothing: it's noise, and it silently
+# pins that field so future baseline edits stop reaching this agent.
+# validate-agent.py warns when it finds one.
+# ---------------------------------------------------------------------------
+
+# identity_context:
+#   locale: "en-GB"
+#   domain: "contract law"                 # free text
+#   audience: "external_client"            # internal_team | external_client
+#                                          # | technical | non_technical | mixed
+
+# voice_style:
+#   tone_of_voice: "formal, precise"
+#   persona: "none"                        # none | named
+#   verbosity: "expansive"                 # concise | standard | expansive
+#   formatting_conventions:
+#     tables: "always"                     # always | when_useful | never
+#     headers: true
+
+# operating_constraints:
+#   # Override UP only when the task genuinely needs it. Defaulting agents to a
+#   # top-tier model is the single easiest way to blow out cost.
+#   model: "claude-opus-5"
+#
+#   # standalone (default) | pipeline | router | parallel
+#   # | orchestrator-workers (aka hierarchical-supervisory)
+#   # | evaluator-optimizer
+#   # | collaborative (aka peer-to-peer/swarm)
+#   #
+#   # Multi-agent patterns cost roughly 10-15x the tokens of a standalone agent.
+#   # Start standalone; escalate only when a real use case demands it.
+#   pattern: "evaluator-optimizer"
+#
+#   guardrails:
+#     input_filtering: true
+#     tool_use_limits: "strict"            # default | strict | none
+#     output_validation: true              # recommended for user-facing agents
+#     human_in_the_loop: true              # pause before irreversible actions
+#
+#   evaluation_loop:
+#     enabled: true
+#     reviewer: "self"                     # self | <evaluator agent name>
+#     max_cycles: 3                        # cap it, or a loop can run away
+#
+#   permissions_scope:
+#     filesystem: "read_only"              # workspace_only | read_only | full
+#     # NOTE: arrays REPLACE. To keep the baseline tools and add one, list them all.
+#     tools: ["read", "search"]
+#     external_calls: false
+#
+#   safety_compliance_profile: "default"
+#
+#   cost_performance_budget:
+#     max_tokens_per_run: 8000
+#     latency_target_seconds: 60
+
+# knowledge_memory:
+#   default_context_sources:               # replaces the baseline list entirely
+#     - "skills/core"
+#     - "skills/legal"
+#   memory_behaviour: "persistent"         # stateless | persistent
+#   context_management:
+#     tool_output_token_cap: 25000
+#     clear_stale_tool_calls: true
+
+# interop:
+#   output_format_contract: "json"         # markdown | json | plain_text | file
+#                                          # markdown is the baseline default —
+#                                          # only switch when a downstream tool parses it
+#   output_location: "./output"
+#   escalation_path: "human_review"        # human_review | <agent name>
+
+# steering:
+#   feedback_mode: "chat_and_bulk"         # chat_and_bulk | chat_only
+#   bulk_feedback_file: "./steering.md"
+
+# --- Credentials: names only, never values ---------------------------------
+# credentials:
+#   example_service_token: "env:EXAMPLE_SERVICE_TOKEN"

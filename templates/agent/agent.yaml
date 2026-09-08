@@ -1,0 +1,45 @@
+# agent.yaml — per-agent configuration
+#
+# List ONLY the fields that differ from your baseline profile. Everything
+# omitted is inherited from the file named in `extends` at runtime.
+# A two-field override is perfectly valid.
+#
+# Precedence: baseline -> THIS FILE -> CLI flag -> in-session instruction
+#   - Higher wins for the field it sets, and only that field
+#   - Nested maps merge at the leaf; sibling keys survive
+#   - Arrays REPLACE wholesale, they do not append
+#
+# Never put a secret here. Reference env vars as env:VAR_NAME.
+# See docs/environment-variables.md in the toolkit.
+
+schema_version: 1
+
+# What this agent inherits from. Explicit, not convention — so the agent is
+# self-describing, and so you can point it at a different baseline (work vs
+# personal) without changing anything else.
+extends: "~/.agent-toolkit/baseline.yaml"
+
+name: "my-agent"
+description: "One line on what this agent does."
+
+# ---------------------------------------------------------------------------
+# Overrides — delete anything you don't need. An empty override set is fine;
+# it means "inherit the baseline entirely".
+# ---------------------------------------------------------------------------
+
+# operating_constraints:
+#   model: "claude-opus-5"              # override UP only when the task needs it
+#   pattern: "evaluator-optimizer"      # standalone | pipeline | router | parallel
+#                                       # | orchestrator-workers | evaluator-optimizer
+#                                       # | collaborative
+#   evaluation_loop:
+#     enabled: true
+#     reviewer: "self"                  # required when enabled is true
+#   guardrails:
+#     output_validation: true           # merges — input_filtering etc. still inherited
+
+# voice_style:
+#   verbosity: "expansive"
+
+# interop:
+#   output_location: "./output"

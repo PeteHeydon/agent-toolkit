@@ -1,0 +1,6 @@
+schema_version: 1
+extends: "{{BASELINE}}"
+name: "probe"
+description: "Test probe."
+operating_constraints:
+  pattern: "evaluator-optimizer"

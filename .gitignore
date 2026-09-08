@@ -1,0 +1,17 @@
+# Secrets
+.env
+
+# Personal profile/agent data, in case one is ever dropped in the repo by
+# mistake — these belong in ~/.agent-toolkit/, never here.
+baseline.yaml
+*.local.yaml
+*.bak-*
+output/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS/editor noise
+.DS_Store
+*.swp
