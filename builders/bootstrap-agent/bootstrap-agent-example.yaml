@@ -13,7 +13,7 @@
 # See docs/environment-variables.md.
 # ---------------------------------------------------------------------------
 
-schema_version: 1
+schema_version: 2
 
 identity_context:
   # Language + region. Drives date/number/currency formatting.
@@ -48,7 +48,7 @@ voice_style:
 operating_constraints:
   # Default model. Deliberately mid-tier — agents override UP when a task
   # genuinely needs it. Defaulting everything to top-tier is how cost blows out.
-  model: "claude-sonnet-4-6"
+  model: "claude-sonnet-5"
 
   # Default agent pattern. Enumerated, not free text. Start simple.
   # Options: standalone (default) | pipeline | router | parallel
@@ -60,7 +60,8 @@ operating_constraints:
   guardrails:
     input_filtering: true
     tool_use_limits: "default"     # default | strict | none
-    output_validation: false       # enable for user-facing or high-risk agents
+    output_validation: true        # the Balanced risk posture; see the schema's
+                                   # x-composite-questions for all three rows
     human_in_the_loop: false       # pause for approval before irreversible actions
 
   evaluation_loop:
@@ -70,8 +71,13 @@ operating_constraints:
 
   permissions_scope:
     filesystem: "workspace_only"   # workspace_only | read_only | full
-    tools: ["read", "write", "search"]
-    external_calls: false
+    # Closed vocabulary: file.read | file.search | file.write | shell
+    #                  | web.search | web.fetch | subagent
+    # Arrays REPLACE wholesale — to add one, list them all.
+    capabilities: ["file.read", "file.search", "file.write", "web.search", "web.fetch"]
+    web:
+      allowed_domains: []          # empty means "no allow-list", not "none allowed"
+      blocked_domains: []          # both bound web.fetch only
 
   safety_compliance_profile: "default"
 
@@ -80,8 +86,8 @@ operating_constraints:
     latency_target_seconds: 30
 
 knowledge_memory:
-  default_context_sources:
-    - "skills/core"
+  default_context_sources: []   # paths loaded on start; reusable guidance
+                                # belongs in library/ and is composed instead
 
   memory_behaviour: "stateless"    # stateless | persistent
 

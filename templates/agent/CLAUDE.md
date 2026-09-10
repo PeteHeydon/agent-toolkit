@@ -2,21 +2,22 @@
 
 {{AGENT_DESCRIPTION}}
 
-This agent inherits its defaults from `~/.agent-toolkit/baseline.yaml` — see
-`agent.yaml` for what it overrides. Everything not listed there tracks the
-baseline, including future edits to it.
+<!-- The region below is generated from this agent's resolved configuration.
+     Regenerate it with:
+       python3 <agent-toolkit>/builders/create-agent/scripts/render-agent.py .
+     Edits inside the markers are lost on the next render. Everything outside
+     them is yours, including the Process and Notes sections below. -->
+<!-- BEGIN GENERATED render:v1 config-hash:unrendered -->
+<!-- END GENERATED -->
 
 ## Process
 
-<!--
-This section is intentionally empty. `/create-agent` scaffolds structure, not
-intent — write the steps this agent actually follows. Number them; keep each
-step concrete enough that a fresh run of this agent could follow it cold.
--->
+{{PROCESS}}
 
-1.
-2.
-3.
+## Notes
+
+<!-- Yours. Anything worth keeping about this agent that isn't a step: what it
+     was built for, what you tried that didn't work, who to ask. -->
 
 ## Related
 - `agent.yaml` — overrides on top of the baseline

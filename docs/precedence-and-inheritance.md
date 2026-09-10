@@ -1,5 +1,10 @@
 # Precedence & Inheritance
 
+**This is the canonical statement of these rules.** Everywhere else in the
+toolkit carries at most a two-line summary and a link here. If you change a
+rule, change it here — a second full explanation somewhere else is the one that
+goes stale and the one someone reads.
+
 ## The four layers
 
 Values resolve lowest to highest. Higher always wins — but **only for the field

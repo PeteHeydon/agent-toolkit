@@ -1,0 +1,23 @@
+# `shell.exec` is not in the capability vocabulary. The v1 names ("read",
+# "write") would fail the same way, which is the migration signal.
+schema_version: 2
+
+identity_context:
+  locale: "en-AU"
+  domain: "general"
+  audience: "internal_team"
+
+voice_style:
+  tone_of_voice: "neutral, direct"
+  verbosity: "concise"
+
+operating_constraints:
+  model: "claude-sonnet-5"
+  pattern: "standalone"
+  permissions_scope:
+    filesystem: "workspace_only"
+    capabilities: ["file.read", "shell.exec"]
+
+interop:
+  output_format_contract: "markdown"
+  output_location: "./output"

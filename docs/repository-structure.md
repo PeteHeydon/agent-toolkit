@@ -1,5 +1,9 @@
 # Repository Structure
 
+Where everything lives and why. For how a configuration becomes a running
+agent, see [`architecture.md`](architecture.md); for the reasoning behind these
+choices, [`decisions.md`](decisions.md).
+
 ## The three things, kept separate
 
 Most confusion in a toolkit like this comes from collapsing these. They are not
@@ -56,7 +60,8 @@ agent-toolkit/                          # the toolkit — cloned, updated with g
 │   │   ├── bootstrap-agent-example.yaml
 │   │   ├── schema/baseline-profile.schema.json
 │   │   └── scripts/
-│   │       ├── detect-profile.sh
+│   │       ├── detect-profile.py
+│   │       ├── detect-profile.sh      # interpreter probe, then delegates
 │   │       └── validate-profile.py
 │   └── create-agent/                   # scaffolds agents from the baseline
 │       ├── CLAUDE.md
@@ -71,22 +76,32 @@ agent-toolkit/                          # the toolkit — cloned, updated with g
 │   └── agent/
 │       ├── agent.yaml
 │       ├── CLAUDE.md
-│       └── README.md
+│       ├── README.md
+│       ├── steering.md
+│       └── output/.gitkeep
 │
-├── skills/                             # composable capability packages
-├── tools/                              # reusable tool definitions
-├── patterns/                           # pattern templates (standalone, pipeline, …)
+├── library/                    [6.0]   # reusable behaviour modules, composed into agents
+│   ├── pattern/                        #   process skeletons: standalone, pipeline, …
+│   ├── role/                           #   stance and expertise: researcher, reviewer, …
+│   └── routine/                        #   procedures: web-research, structured-extract, …
+│
+├── runtimes/                   [4.2]   # capability-to-tool maps, one file per runtime
+│   └── claude-code.yaml
 │
 ├── scripts/
+│   ├── schema_utils.py                 # schema-derived enums, known-model list
 │   └── verify-toolkit.sh               # pre-flight check: files, deps, schemas, resolver
 │
 ├── docs/
+│   ├── architecture.md                 # how a config becomes a running agent
+│   ├── decisions.md                    # the design record
 │   ├── getting-started.md
 │   ├── testing.md
 │   ├── repository-structure.md         # this file
 │   ├── precedence-and-inheritance.md
 │   ├── environment-variables.md
 │   ├── vision.md
+│   ├── proposals/
 │   └── research/
 │
 ├── .gitignore
@@ -94,6 +109,16 @@ agent-toolkit/                          # the toolkit — cloned, updated with g
 ├── HANDOFF.md                          # context for picking this up
 └── README.md
 ```
+
+**`[n.n]` marks a directory that does not exist yet**, with the `TODO.md` item
+that creates it. Everything unmarked is on disk today. A layout diagram that
+quietly includes directories nobody has built is the first thing a new
+contributor trusts and the first thing that misleads them.
+
+There is deliberately no `skills/`, `tools/` and `patterns/` split. One
+`library/` of small typed modules replaced all three: three parallel
+vocabularies is three things to maintain before anything uses one. See
+`decisions.md` D14.
 
 **`builders/` vs `templates/` — the test:** does it execute in place, or get
 copied and edited? `bootstrap-agent` runs and stays put. `templates/agent/` is

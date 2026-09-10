@@ -40,9 +40,10 @@ Nothing is ever written into the toolkit repository.
 
 | File | Purpose |
 |---|---|
-| `CLAUDE.md` | The process — preconditions, interview, confirm, scaffold, validate |
+| `CLAUDE.md` | The process — preconditions, interview, confirm, scaffold, report |
 | `agent-example.yaml` | Annotated reference showing every overridable field and option |
 | `schema/agent-override.schema.json` | Machine-readable schema for `agent.yaml` |
+| `scripts/scaffold-agent.py` | Deterministic file creation — copies the template, writes `agent.yaml`, validates |
 | `scripts/resolve-config.py` | The precedence resolver — merges layers, reports provenance |
 | `scripts/validate-agent.py` | Structural + resolution + hygiene validation |
 
@@ -94,14 +95,12 @@ something behaves unexpectedly.
 
 ## Merge rules
 
-- Higher precedence wins **for the field it sets, and only that field**
-- Nested maps merge at the leaf — overriding `guardrails.output_validation` leaves
-  `input_filtering` and its other siblings inherited
-- **Arrays replace wholesale.** To keep the baseline's tools and add one, list them
-  all. Silently appending permission arrays is how an agent ends up with access
-  nobody granted it
+Higher precedence wins for the field it sets, and only that field. The one rule
+worth carrying in your head while editing an `agent.yaml`: **arrays replace
+wholesale.** To keep the baseline's tools and add one, list them all.
 
-Full detail in [`docs/precedence-and-inheritance.md`](../../docs/precedence-and-inheritance.md).
+Everything else — leaf merging, cycle handling, provenance — is in
+[`docs/precedence-and-inheritance.md`](../../docs/precedence-and-inheritance.md).
 
 ## Validation
 

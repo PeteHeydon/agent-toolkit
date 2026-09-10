@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 
 identity_context:
   locale: "en-AU"
@@ -15,7 +15,7 @@ voice_style:
     code_blocks: "fenced_with_language"
 
 operating_constraints:
-  model: "claude-sonnet-4-6"
+  model: "claude-sonnet-5"
   pattern: "bogus"
   guardrails:
     input_filtering: true
@@ -28,16 +28,14 @@ operating_constraints:
     max_cycles: 3
   permissions_scope:
     filesystem: "workspace_only"
-    tools: ["read", "write", "search"]
-    external_calls: false
+    capabilities: ["file.read", "file.search", "file.write", "web.search", "web.fetch"]
   safety_compliance_profile: "default"
   cost_performance_budget:
     max_tokens_per_run: 4000
     latency_target_seconds: 30
 
 knowledge_memory:
-  default_context_sources:
-    - "skills/core"
+  default_context_sources: []
   memory_behaviour: "stateless"
   context_management:
     tool_output_token_cap: 25000

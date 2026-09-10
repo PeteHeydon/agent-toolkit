@@ -1,10 +1,14 @@
 """
-test_resolve.py — resolve-config.py, cases R1-R9 from docs/testing.md.
+test_resolve.py — resolve-config.py, cases R1-R10 from docs/testing.md.
 
 R1 is the most important test in the suite: if leaf merging breaks, an agent
 overriding operating_constraints.guardrails.output_validation would silently
 wipe input_filtering and every other sibling — a security-relevant failure
 that produces no error.
+
+R9 and R10 are the D16 cases: --json wraps resolved/provenance/chain in the
+cli_output envelope on success, and a resolution error becomes one structured
+entry in `errors` rather than a bare stderr line, when --json is given.
 """
 
 import json
@@ -13,7 +17,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from base import ToolkitTestCase, load_fixture
+from base import ToolkitTestCase, as_yaml_path, load_fixture
 
 
 class ResolveConfigTests(ToolkitTestCase):
@@ -26,7 +30,7 @@ class ResolveConfigTests(ToolkitTestCase):
         path = self.write("agent.yaml", content)
         result = self.run_resolve(path, "--json")
         self.assertEqual(result.returncode, 0, result.stderr)
-        data = json.loads(result.stdout)
+        data = json.loads(result.stdout)["data"]
 
         guardrails = data["resolved"]["operating_constraints"]["guardrails"]
         self.assertIs(guardrails["output_validation"], True)
@@ -37,19 +41,25 @@ class ResolveConfigTests(ToolkitTestCase):
         self.assertEqual(provenance["operating_constraints.guardrails.input_filtering"], "baseline")
 
     def test_r2_array_override_replaces_not_appends(self):
+        """
+        The security-relevant one. The baseline grants five capabilities; the
+        override names one. If arrays merged, the agent would keep file.write
+        and web.fetch that nobody granted it.
+        """
         content = load_fixture("agent-array-override.yaml", BASELINE=self.baseline_path)
         path = self.write("agent.yaml", content)
         result = self.run_resolve(path, "--json")
-        data = json.loads(result.stdout)
+        data = json.loads(result.stdout)["data"]
         self.assertEqual(
-            data["resolved"]["operating_constraints"]["permissions_scope"]["tools"], ["read"]
+            data["resolved"]["operating_constraints"]["permissions_scope"]["capabilities"],
+            ["file.read"],
         )
 
     def test_r3_cli_set_wins_over_file_layers(self):
         content = load_fixture("agent-minimal.yaml", BASELINE=self.baseline_path)
         path = self.write("agent.yaml", content)
         result = self.run_resolve(path, "--set", "operating_constraints.model=claude-opus-5", "--json")
-        data = json.loads(result.stdout)
+        data = json.loads(result.stdout)["data"]
         self.assertEqual(data["resolved"]["operating_constraints"]["model"], "claude-opus-5")
         self.assertEqual(data["provenance"]["operating_constraints.model"], "CLI flag")
 
@@ -64,7 +74,7 @@ class ResolveConfigTests(ToolkitTestCase):
     def test_r5_extends_chain_too_deep_is_capped(self):
         prev = self.baseline_path
         for i in range(12):
-            content = 'schema_version: 1\nextends: "%s"\n' % prev
+            content = 'schema_version: 1\nextends: "%s"\n' % as_yaml_path(prev)
             prev = self.write("chain-%d.yaml" % i, content)
         result = self.run_resolve(prev)
         self.assertEqual(result.returncode, 1)
@@ -98,10 +108,26 @@ class ResolveConfigTests(ToolkitTestCase):
         content = load_fixture("agent-minimal.yaml", BASELINE=self.baseline_path)
         path = self.write("agent.yaml", content)
         result = self.run_resolve(path, "--json")
-        data = json.loads(result.stdout)
+        envelope = json.loads(result.stdout)
+        self.assertIn("ok", envelope)
+        self.assertIn("errors", envelope)
+        self.assertIn("warnings", envelope)
+        self.assertTrue(envelope["ok"])
+        data = envelope["data"]
         self.assertIn("resolved", data)
         self.assertIn("provenance", data)
         self.assertIn("chain", data)
+
+    def test_r10_resolution_error_is_the_envelope_under_json(self):
+        content = 'schema_version: 1\nextends: "/does/not/exist.yaml"\nname: "probe"\n'
+        path = self.write("agent.yaml", content)
+        result = self.run_resolve(path, "--json")
+        self.assertEqual(result.returncode, 1)
+        envelope = json.loads(result.stdout)
+        self.assertFalse(envelope["ok"])
+        self.assertEqual(len(envelope["errors"]), 1)
+        self.assertIn("not found", envelope["errors"][0]["message"])
+        self.assertEqual(envelope["errors"][0]["field"], "extends")
 
 
 if __name__ == "__main__":

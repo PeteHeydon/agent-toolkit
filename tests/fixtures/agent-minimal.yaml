@@ -1,6 +1,13 @@
-schema_version: 1
+# A minimal, coherent override: one field that differs from the baseline and
+# contradicts nothing else.
+#
+# This used to override `pattern: evaluator-optimizer` against a baseline whose
+# evaluation loop is off — which the semantic checks added in 8.1 correctly
+# rejected as a contradiction. See tests/fixtures/agent-incoherent-pattern.yaml
+# for that case, kept deliberately.
+schema_version: 2
 extends: "{{BASELINE}}"
 name: "probe"
 description: "Test probe."
-operating_constraints:
-  pattern: "evaluator-optimizer"
+voice_style:
+  verbosity: "expansive"

@@ -20,7 +20,7 @@ Usage:
     resolve-config.py <agent.yaml> --explain        # with provenance per line
     resolve-config.py <agent.yaml> --set a.b=c      # apply a CLI-layer override
     resolve-config.py --baseline-only [--summary]   # just the baseline
-    resolve-config.py <agent.yaml> --json           # machine-readable
+    resolve-config.py <agent.yaml> --json           # the cli_output envelope
 
 Exit codes:
     0  resolved
@@ -29,7 +29,6 @@ Exit codes:
 """
 
 import argparse
-import json
 import os
 import sys
 
@@ -39,13 +38,24 @@ except ImportError:
     print("ERROR: pyyaml is required. Install with: pip install pyyaml", file=sys.stderr)
     sys.exit(2)
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+BUILDER_DIR = os.path.dirname(SCRIPT_DIR)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(BUILDER_DIR)), "scripts"))
+
+try:
+    import cli_output
+except ImportError as exc:  # pragma: no cover
+    print("ERROR: could not import scripts/cli_output.py: %s" % exc, file=sys.stderr)
+    sys.exit(2)
+
 MAX_EXTENDS_DEPTH = 10
 
 # Keys whose values are arrays that must replace rather than merge.
 # Listed explicitly rather than inferred, so the behaviour is auditable.
 REPLACE_ARRAYS = {
-    "operating_constraints.permissions_scope.tools",
+    "operating_constraints.permissions_scope.capabilities",
     "knowledge_memory.default_context_sources",
+    "compose",
 }
 
 
@@ -215,7 +225,7 @@ def main():
     parser.add_argument("--baseline-only", action="store_true", help="Resolve the baseline alone")
     parser.add_argument("--explain", action="store_true", help="Annotate each value with its source")
     parser.add_argument("--summary", action="store_true", help="Print a short human summary")
-    parser.add_argument("--json", action="store_true", help="Emit JSON")
+    parser.add_argument("--json", action="store_true", help="Emit the JSON envelope")
     parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                         help="Apply a CLI-layer override (repeatable)")
     args = parser.parse_args()
@@ -233,7 +243,13 @@ def main():
         resolved, provenance = apply_cli_sets(resolved, provenance, args.set)
 
     except ResolveError as exc:
-        print("ERROR: %s" % exc, file=sys.stderr)
+        # Field is "extends" even for a bad --set: both are about which layer
+        # won, and there's no single leaf at fault the way a validator's
+        # per-field checks have.
+        if args.json:
+            cli_output.print_envelope([cli_output.issue(str(exc), field="extends")], [], {})
+        else:
+            print("ERROR: %s" % exc, file=sys.stderr)
         return 1
 
     if args.summary:
@@ -242,7 +258,9 @@ def main():
         return 0
 
     if args.json:
-        print(json.dumps({"resolved": resolved, "provenance": provenance, "chain": chain}, indent=2))
+        cli_output.print_envelope(
+            data={"resolved": resolved, "provenance": provenance, "chain": chain}
+        )
         return 0
 
     if args.explain:

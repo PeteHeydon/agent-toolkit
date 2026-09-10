@@ -1,0 +1,69 @@
+# claude-code.yaml — how this toolkit's capability vocabulary maps to Claude
+# Code's tools.
+#
+# This is data, not code, so supporting a second runtime is a second file in
+# this directory rather than a branch in the renderer. Nothing here is
+# toolkit-wide truth: it is one runtime's answer to "which tools does
+# `file.write` mean?".
+#
+# Read by builders/create-agent/scripts/render-permissions.py.
+
+runtime: claude-code
+description: "Claude Code, run from inside an agent directory."
+
+# Capability -> the tools that capability grants. A tool named by more than
+# one capability (Glob) is granted if any of them is.
+capabilities:
+  file.read: [Read, Glob]
+  file.search: [Grep, Glob]
+  file.write: [Write, Edit, NotebookEdit]
+  shell: [Bash]
+  web.search: [WebSearch]
+  web.fetch: [WebFetch]
+  subagent: [Task]
+
+# Tools worth an explicit `deny` when the capability granting them is absent,
+# rather than leaving them merely un-allowed.
+#
+# The difference matters: an un-allowed tool prompts the user, and a prompt at
+# the wrong moment is answered yes. A denied tool cannot run. Only tools whose
+# misuse is expensive or irreversible belong here — denying everything
+# ungranted would turn every new capability into a breaking change.
+#
+# WebSearch is here for a different reason, and it is worth stating. On its own
+# it is cheap and read-only, so by the rule above it would not qualify. But
+# D12 grants `web.search` at *every* risk posture, so the only way for an agent
+# to lack it is a deliberate withdrawal — `/create-agent --no-web`, or someone
+# editing the capability list by hand. When absence can only mean "somebody
+# said no", leaving the tool merely un-allowed turns that no into a prompt, and
+# "this agent must not reach the network" has to mean it.
+high_consequence:
+  - Bash
+  - Write
+  - Edit
+  - NotebookEdit
+  - WebFetch
+  - WebSearch
+
+# Filesystem posture, applied after capabilities. These denials win over a
+# grant: a profile with `file.write` and `filesystem: read_only` is
+# contradictory, and the safe reading of a contradiction is the restrictive
+# one.
+filesystem:
+  read_only:
+    deny: [Write, Edit, NotebookEdit]
+  workspace_only:
+    # Claude Code already scopes to the directory it runs in, which is the
+    # agent directory, so this posture needs no extra rule.
+    deny: []
+  full:
+    deny: []
+
+# Rule form for per-domain web access. `{domain}` is substituted per entry in
+# permissions_scope.web.allowed_domains / blocked_domains.
+#
+# UNVERIFIED against Claude Code's own documentation — see TODO 10.0. If the
+# syntax is wrong these rules are inert, which fails open for allowed_domains
+# and, more importantly, fails open for blocked_domains. Confirm before
+# relying on a domain block for anything that matters.
+web_domain_rule: "WebFetch(domain:{domain})"

@@ -1,6 +1,6 @@
 ---
 description: Scaffold a new agent from a template, inheriting your baseline profile
-argument-hint: "<agent-name> [--path <dir>] [--pattern <pattern>] [--express|--full]"
+argument-hint: "<agent-name> [--path <dir>] [--pattern <pattern>] [--web|--no-web] [--compose <kind/name>] [--express|--full]"
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
 
@@ -24,5 +24,16 @@ Read and follow the process defined in:
 - **Overrides only.** The generated `agent.yaml` contains only fields that differ
   from the baseline. Never copy the resolved config into it — that would break
   reference-based inheritance and the agent would stop tracking baseline edits.
+- **File creation is deterministic, not prose.** All of it goes through
+  `scaffold-agent.py`; never copy, create or edit a scaffolded file directly.
+- **Web access is a question, not a vocabulary.** Ask whether the agent needs
+  to look things up online and pass `--web` or `--no-web`. Never ask the user
+  to name a capability, and never hand-write the `capabilities` array — it
+  replaces the inherited one wholesale, so a partial list removes access
+  nobody meant to remove.
+- **Composed modules come from the library, never from memory.** `--compose
+  <kind/name>` takes a role or routine that exists in `library/`. Offer the
+  user the list from `library/README.md` rather than inventing a name; a
+  module that is not there is an error, not a prompt to write one.
 - This command is run from within `agent-toolkit/`. That is the invocation
   location only.

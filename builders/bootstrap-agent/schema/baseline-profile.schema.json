@@ -12,11 +12,91 @@
     "interop"
   ],
   "additionalProperties": false,
+  "x-groups": [
+    "Identity & context",
+    "Voice & style",
+    "Operating constraints",
+    "Knowledge & memory",
+    "Interop",
+    "Steering",
+    "Credentials"
+  ],
+  "x-composite-questions": [
+    {
+      "id": "risk_posture",
+      "label": "Risk posture",
+      "group": "Operating constraints",
+      "question": "How much should agents be allowed to do unsupervised?",
+      "help": "One answer sets both the capability set and the guardrails. Web search is granted at every posture and page fetching at all but the strictest — withholding read-only network access is a worse failure than the risk it avoids (D12). Full mode walks those two characteristics field by field instead.",
+      "express": true,
+      "default": "balanced",
+      "answers": [
+        {
+          "value": "cautious",
+          "label": "Cautious",
+          "help": "Read-only filesystem and web search, every output checked, a human in the loop.",
+          "sets": {
+            "operating_constraints.permissions_scope.filesystem": "read_only",
+            "operating_constraints.permissions_scope.capabilities": [
+              "file.read",
+              "file.search",
+              "web.search"
+            ],
+            "operating_constraints.guardrails.input_filtering": true,
+            "operating_constraints.guardrails.tool_use_limits": "strict",
+            "operating_constraints.guardrails.output_validation": true,
+            "operating_constraints.guardrails.human_in_the_loop": true
+          }
+        },
+        {
+          "value": "balanced",
+          "label": "Balanced",
+          "help": "Write within the workspace, search and fetch the web, no human gate. The default.",
+          "sets": {
+            "operating_constraints.permissions_scope.filesystem": "workspace_only",
+            "operating_constraints.permissions_scope.capabilities": [
+              "file.read",
+              "file.search",
+              "file.write",
+              "web.search",
+              "web.fetch"
+            ],
+            "operating_constraints.guardrails.input_filtering": true,
+            "operating_constraints.guardrails.tool_use_limits": "default",
+            "operating_constraints.guardrails.output_validation": true,
+            "operating_constraints.guardrails.human_in_the_loop": false
+          }
+        },
+        {
+          "value": "autonomous",
+          "label": "Autonomous",
+          "help": "Everything above plus shell and subagents, with no tool-use ceiling.",
+          "sets": {
+            "operating_constraints.permissions_scope.filesystem": "full",
+            "operating_constraints.permissions_scope.capabilities": [
+              "file.read",
+              "file.search",
+              "file.write",
+              "shell",
+              "web.search",
+              "web.fetch",
+              "subagent"
+            ],
+            "operating_constraints.guardrails.input_filtering": true,
+            "operating_constraints.guardrails.tool_use_limits": "none",
+            "operating_constraints.guardrails.output_validation": false,
+            "operating_constraints.guardrails.human_in_the_loop": false
+          }
+        }
+      ]
+    }
+  ],
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1,
-      "description": "Schema version. Bumped when fields are added, renamed, or removed; drives migration."
+      "const": 2,
+      "description": "Schema version. Bumped when fields are added, renamed, or removed; drives migration.",
+      "x-internal": true
     },
     "identity_context": {
       "type": "object",
@@ -29,10 +109,19 @@
       "properties": {
         "locale": {
           "type": "string",
-          "description": "BCP-47 tag, e.g. en-AU"
+          "description": "BCP-47 tag, e.g. en-AU",
+          "x-label": "Locale",
+          "x-group": "Identity & context",
+          "x-help": "Language, region, and date/number/currency formatting conventions",
+          "x-infer": "system_locale"
         },
         "domain": {
-          "type": "string"
+          "type": "string",
+          "x-label": "Domain",
+          "x-group": "Identity & context",
+          "x-question": "What industry or subject area will your agents mostly work in?",
+          "x-help": "Industry or subject area the agent will operate from",
+          "x-express": true
         },
         "audience": {
           "type": "string",
@@ -42,7 +131,13 @@
             "technical",
             "non_technical",
             "mixed"
-          ]
+          ],
+          "default": "internal_team",
+          "x-label": "Audience",
+          "x-group": "Identity & context",
+          "x-question": "Who is the output usually for?",
+          "x-help": "Who the agent's output is for (internal team, external client, technical vs non-technical)",
+          "x-express": true
         }
       }
     },
@@ -55,7 +150,12 @@
       "additionalProperties": false,
       "properties": {
         "tone_of_voice": {
-          "type": "string"
+          "type": "string",
+          "x-label": "Tone of voice",
+          "x-group": "Voice & style",
+          "x-question": "How should agents write by default?",
+          "x-help": "Formal/casual, terse/expansive",
+          "x-express": true
         },
         "persona": {
           "type": "string",
@@ -63,7 +163,11 @@
             "none",
             "named"
           ],
-          "default": "none"
+          "default": "none",
+          "x-label": "Persona",
+          "x-group": "Voice & style",
+          "x-question": "Should agents have a named persona, or stay neutral?",
+          "x-help": "Whether the agent has a name/character, or stays neutral/utilitarian"
         },
         "verbosity": {
           "type": "string",
@@ -72,11 +176,20 @@
             "standard",
             "expansive"
           ],
-          "default": "concise"
+          "default": "concise",
+          "x-label": "Verbosity",
+          "x-group": "Voice & style",
+          "x-question": "How much should agents write by default?",
+          "x-help": "Default output length/density (concise bullets vs full prose)",
+          "x-express": true
         },
         "formatting_conventions": {
           "type": "object",
           "additionalProperties": false,
+          "x-label": "Formatting conventions",
+          "x-group": "Voice & style",
+          "x-question": "What house style should agents use for markdown?",
+          "x-help": "House style for markdown headers, tables, code blocks, etc.",
           "properties": {
             "headers": {
               "type": "boolean",
@@ -109,7 +222,12 @@
       "properties": {
         "model": {
           "type": "string",
-          "description": "Default model. Mid-tier by design \u2014 agents override up only when needed."
+          "default": "claude-sonnet-5",
+          "description": "Default model. Mid-tier by design — agents override up only when needed.",
+          "x-label": "Model",
+          "x-group": "Operating constraints",
+          "x-question": "Which model should agents use by default?",
+          "x-help": "Default LLM model to utilise — baseline is a mid-tier model (e.g. Sonnet) to avoid cost blowouts from defaulting every agent to the highest-tier model; agents can override up where a task genuinely needs it"
         },
         "pattern": {
           "type": "string",
@@ -122,11 +240,20 @@
             "evaluator-optimizer",
             "collaborative"
           ],
-          "default": "standalone"
+          "default": "standalone",
+          "x-label": "Pattern",
+          "x-group": "Operating constraints",
+          "x-question": "Which agent pattern should be the default?",
+          "x-help": "Default agent pattern from a small enumerated set (not free text) — baseline is `standalone`; other values to introduce as needed: `pipeline`, `router`, `parallel`, `orchestrator-workers` (aka hierarchical-supervisory), `evaluator-optimizer`, `collaborative` (aka peer-to-peer/swarm). Keep the default simple; expand the set only when a real use case needs it"
         },
         "guardrails": {
           "type": "object",
           "additionalProperties": false,
+          "x-label": "Guardrails",
+          "x-group": "Operating constraints",
+          "x-question": "Which guardrails should apply by default?",
+          "x-help": "Input filtering, tool-use limits, and output validation to apply — recurs as its own concern across every pattern, separate from the pattern itself. In Express mode this is asked as a single \"risk posture\" question",
+          "x-express-via": "risk_posture",
           "properties": {
             "input_filtering": {
               "type": "boolean",
@@ -143,7 +270,7 @@
             },
             "output_validation": {
               "type": "boolean",
-              "default": false
+              "default": true
             },
             "human_in_the_loop": {
               "type": "boolean",
@@ -154,6 +281,10 @@
         "evaluation_loop": {
           "type": "object",
           "additionalProperties": false,
+          "x-label": "Evaluation/quality loop",
+          "x-group": "Operating constraints",
+          "x-question": "Should agents self-review before returning output?",
+          "x-help": "Whether the agent self-reviews or is checked by a second pass before returning output (off by default for a standalone agent; on for patterns like evaluator-optimizer)",
           "properties": {
             "enabled": {
               "type": "boolean",
@@ -177,6 +308,11 @@
         "permissions_scope": {
           "type": "object",
           "additionalProperties": false,
+          "x-label": "Permissions/scope",
+          "x-group": "Operating constraints",
+          "x-question": "What should agents be allowed to touch?",
+          "x-help": "What the agent is and isn't allowed to touch, as a closed capability vocabulary (`file.read`, `file.search`, `file.write`, `shell`, `web.search`, `web.fetch`, `subagent`) plus the domain lists that bound `web.fetch` — also covered by the risk posture question",
+          "x-express-via": "risk_posture",
           "properties": {
             "filesystem": {
               "type": "string",
@@ -187,33 +323,77 @@
               ],
               "default": "workspace_only"
             },
-            "tools": {
+            "capabilities": {
               "type": "array",
               "items": {
-                "type": "string"
-              }
+                "type": "string",
+                "enum": [
+                  "file.read",
+                  "file.search",
+                  "file.write",
+                  "shell",
+                  "web.search",
+                  "web.fetch",
+                  "subagent"
+                ]
+              },
+              "default": [
+                "file.read",
+                "file.search",
+                "file.write",
+                "web.search",
+                "web.fetch"
+              ],
+              "description": "Closed vocabulary. Replaces v1's `tools`, whose names mapped to no runtime, and v1's `external_calls`, which conflated web search, page fetching and arbitrary egress into one boolean. REPLACES the inherited list; never appends."
             },
-            "external_calls": {
-              "type": "boolean",
-              "default": false
+            "web": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Parameters for web.fetch only. Granting or withholding web access is the capability's job; these bound where it may go.",
+              "properties": {
+                "allowed_domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": []
+                },
+                "blocked_domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": []
+                }
+              }
             }
           }
         },
         "safety_compliance_profile": {
           "type": "string",
-          "default": "default"
+          "default": "default",
+          "x-label": "Safety/compliance profile",
+          "x-group": "Operating constraints",
+          "x-question": "Any regulatory or org-specific compliance profile to inherit?",
+          "x-help": "Regulatory or org-specific guardrails to inherit"
         },
         "cost_performance_budget": {
           "type": "object",
           "additionalProperties": false,
+          "x-label": "Cost/performance budget",
+          "x-group": "Operating constraints",
+          "x-question": "What token and latency budget should agents assume?",
+          "x-help": "Token limits, preferred model tier, latency tolerance",
           "properties": {
             "max_tokens_per_run": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "default": 4000
             },
             "latency_target_seconds": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "default": 30
             }
           }
         }
@@ -227,7 +407,13 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": [],
+          "x-label": "Default context sources",
+          "x-group": "Knowledge & memory",
+          "x-question": "Which skills or docs should agents load on init?",
+          "x-help": "Which skills/docs/knowledge base the agent should pull from on init",
+          "description": "Paths an agent loads on start, relative to its own directory. Empty by default: reusable guidance belongs in library/ and is composed, not loaded by path."
         },
         "memory_behaviour": {
           "type": "string",
@@ -235,11 +421,19 @@
             "stateless",
             "persistent"
           ],
-          "default": "stateless"
+          "default": "stateless",
+          "x-label": "Memory behaviour",
+          "x-group": "Knowledge & memory",
+          "x-question": "Should agents persist state across runs, or start fresh?",
+          "x-help": "Whether it persists state across runs or starts fresh each time"
         },
         "context_management": {
           "type": "object",
           "additionalProperties": false,
+          "x-label": "Context management",
+          "x-group": "Knowledge & memory",
+          "x-question": "How should agents keep the context window under control?",
+          "x-help": "How the agent keeps its context window under control as a run grows — default truncation/pagination limits on tool output, and whether stale tool calls/results get cleared as token limits approach",
           "properties": {
             "tool_output_token_cap": {
               "type": "integer",
@@ -270,15 +464,27 @@
             "plain_text",
             "file"
           ],
-          "default": "markdown"
+          "default": "markdown",
+          "x-label": "Output format contract",
+          "x-group": "Interop",
+          "x-question": "What output format should agents produce by default?",
+          "x-help": "Markdown by default, for human consumption; JSON or another machine-readable format only where a downstream agent/tool specifically needs it"
         },
         "output_location": {
           "type": "string",
-          "default": "./output"
+          "default": "./output",
+          "x-label": "Output location",
+          "x-group": "Interop",
+          "x-question": "Where should agent results be written?",
+          "x-help": "Default output directory (e.g. `./output`) that agent results are written to, rather than the project root"
         },
         "escalation_path": {
           "type": "string",
-          "default": "human_review"
+          "default": "human_review",
+          "x-label": "Escalation path",
+          "x-group": "Interop",
+          "x-question": "What should an agent hand off to when it hits its limits?",
+          "x-help": "Who/what it hands off to when it hits its limits (another agent, a human)"
         }
       }
     },
@@ -292,7 +498,11 @@
             "chat_and_bulk",
             "chat_only"
           ],
-          "default": "chat_and_bulk"
+          "default": "chat_and_bulk",
+          "x-label": "Feedback mode",
+          "x-group": "Steering",
+          "x-question": "How do you want to give agents feedback?",
+          "x-help": "Supports both live chat-based feedback and bulk written feedback — a steering/notes file the agent reads and applies on request, for guidance considered offline and brought back later rather than given turn-by-turn in chat"
         },
         "bulk_feedback_file": {
           "type": "string",
@@ -303,6 +513,11 @@
     "credentials": {
       "type": "object",
       "description": "Environment variable REFERENCES only. Never literal secret values.",
+      "default": {},
+      "x-label": "Credentials",
+      "x-group": "Credentials",
+      "x-question": "Which credentials will agents need, by environment variable name?",
+      "x-help": "Environment variable *names* only, never values. Validation rejects any literal secret. See [`docs/environment-variables.md`](../../docs/environment-variables.md)",
       "additionalProperties": {
         "type": "string",
         "pattern": "^env:[A-Z_][A-Z0-9_]*$"
@@ -313,7 +528,22 @@
         "string",
         "null"
       ],
-      "description": "Path to a parent profile. Null/absent on the baseline itself; set on agent override files."
+      "default": null,
+      "description": "Path to a parent profile. Null/absent on the baseline itself; set on agent override files.",
+      "x-internal": true
+    },
+    "compose": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(role|routine)/[a-z][a-z0-9-]*$"
+      },
+      "default": [],
+      "description": "Library modules to inline into this agent's generated CLAUDE.md, as kind/name. Roles and routines only: a pattern is named by operating_constraints.pattern, and two ways to say the same thing is two ways to disagree. REPLACES the inherited list; never appends.",
+      "x-label": "Composed modules",
+      "x-group": "Knowledge & memory",
+      "x-question": "Which library modules should every agent compose by default?",
+      "x-help": "Reusable behaviour inlined into each agent's generated `CLAUDE.md` — roles and routines from `library/`. Most baselines compose nothing and let each agent choose; see `library/README.md`"
     }
   }
 }

@@ -26,7 +26,9 @@ Agents should be simple and easy to use, with a focus on a professional context.
 
 ## Sub-Agents
 
-The toolkit itself is builder-agnostic, but the build/maintenance process is imagined as its own set of specialised agents.  Potential indicative sub-agents include:
+The toolkit itself is builder-agnostic, but the build/maintenance process is imagined as its own set of specialised agents. The list below is *indicative scope*, not a plan and not a status report: for what actually exists and what is merely planned, see the builder table in `README.md`, which is the only place status is tracked.
+
+Potential indicative sub-agents include:
 
 - **Agent Refinement Agent** — iterates and improves existing agent definitions
 - **Agent Skills Agent** — manages the skills library available to agents

@@ -34,14 +34,19 @@ for the full separation of builders, profile, and agents.
 |---|---|
 | `CLAUDE.md` | The process definition — detect, interview, confirm, validate, write |
 | `bootstrap-agent-example.yaml` | Annotated example with every default and legal option |
-| `schema/baseline-profile.schema.json` | Machine-readable schema |
+| `schema/baseline-profile.schema.json` | Machine-readable schema — and, via its `x-` keywords, the single source for the interview questions below |
+| `../../scripts/describe-schema.py` | Reads those keywords out as a descriptor; `--write` regenerates the characteristics list below |
 | `scripts/detect-profile.sh` | Returns profile state: NONE / VALID / STALE / INVALID / UNREADABLE |
 | `scripts/validate-profile.py` | Structural validation + no-secrets enforcement; semantic checks stubbed for the Validation Agent |
+| `scripts/migrate-config.py` | Carries a profile forward a schema version, backing up the original first |
 
 ## Characteristics
 While these can be extended, the following are the base characteristics that can be used repeatedly to build your agents — as well as update a baseline of inheritance for agents to be updated from.
 
+<!-- BEGIN GENERATED describe-schema -->
 Characteristics marked **[E]** are asked in Express mode. The rest are inferred from the environment or take the documented default.
+
+Generated from `builders/bootstrap-agent/schema/baseline-profile.schema.json` by `scripts/describe-schema.py --markdown`. Edit the schema, not this list.
 
 ### Identity & context
 * **Locale**: Language, region, and date/number/currency formatting conventions *(inferred from system)*
@@ -59,7 +64,7 @@ Characteristics marked **[E]** are asked in Express mode. The rest are inferred 
 * **Pattern**: Default agent pattern from a small enumerated set (not free text) — baseline is `standalone`; other values to introduce as needed: `pipeline`, `router`, `parallel`, `orchestrator-workers` (aka hierarchical-supervisory), `evaluator-optimizer`, `collaborative` (aka peer-to-peer/swarm). Keep the default simple; expand the set only when a real use case needs it
 * **Guardrails** **[E]**: Input filtering, tool-use limits, and output validation to apply — recurs as its own concern across every pattern, separate from the pattern itself. In Express mode this is asked as a single "risk posture" question
 * **Evaluation/quality loop**: Whether the agent self-reviews or is checked by a second pass before returning output (off by default for a standalone agent; on for patterns like evaluator-optimizer)
-* **Permissions/scope** **[E]**: What the agent is and isn't allowed to touch (files, tools, external calls) — also covered by the risk posture question
+* **Permissions/scope** **[E]**: What the agent is and isn't allowed to touch, as a closed capability vocabulary (`file.read`, `file.search`, `file.write`, `shell`, `web.search`, `web.fetch`, `subagent`) plus the domain lists that bound `web.fetch` — also covered by the risk posture question
 * **Safety/compliance profile**: Regulatory or org-specific guardrails to inherit
 * **Cost/performance budget**: Token limits, preferred model tier, latency tolerance
 
@@ -67,6 +72,7 @@ Characteristics marked **[E]** are asked in Express mode. The rest are inferred 
 * **Default context sources**: Which skills/docs/knowledge base the agent should pull from on init
 * **Memory behaviour**: Whether it persists state across runs or starts fresh each time
 * **Context management**: How the agent keeps its context window under control as a run grows — default truncation/pagination limits on tool output, and whether stale tool calls/results get cleared as token limits approach
+* **Composed modules**: Reusable behaviour inlined into each agent's generated `CLAUDE.md` — roles and routines from `library/`. Most baselines compose nothing and let each agent choose; see `library/README.md`
 
 ### Interop
 * **Output format contract**: Markdown by default, for human consumption; JSON or another machine-readable format only where a downstream agent/tool specifically needs it
@@ -78,6 +84,10 @@ Characteristics marked **[E]** are asked in Express mode. The rest are inferred 
 
 ### Credentials
 * **Credentials**: Environment variable *names* only, never values. Validation rejects any literal secret. See [`docs/environment-variables.md`](../../docs/environment-variables.md)
+
+### Composite questions
+* **Risk posture** **[E]**: One answer sets both the capability set and the guardrails. Web search is granted at every posture and page fetching at all but the strictest — withholding read-only network access is a worse failure than the risk it avoids (D12). Full mode walks those two characteristics field by field instead. Sets `operating_constraints.guardrails` and `operating_constraints.permissions_scope` in one answer — Cautious, Balanced, Autonomous.
+<!-- END GENERATED -->
 
 ## Inheritance
 

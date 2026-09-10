@@ -7,6 +7,9 @@ baseline.yaml
 *.local.yaml
 *.bak-*
 output/
+# ...except the scaffolding template's, which must ship with the toolkit.
+!templates/agent/output/
+!templates/agent/output/.gitkeep
 
 # Python
 __pycache__/

@@ -1,0 +1,10 @@
+# The evaluator-optimizer pattern with the evaluation loop left off. The
+# pattern's seeded process tells the agent to revise and repeat; the config
+# says there is nothing to repeat. A schema cannot catch this — both fields
+# are individually legal.
+schema_version: 2
+extends: "{{BASELINE}}"
+name: "probe"
+description: "Test probe."
+operating_constraints:
+  pattern: "evaluator-optimizer"

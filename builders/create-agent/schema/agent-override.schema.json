@@ -4,12 +4,16 @@
   "title": "Agent Override",
   "description": "A per-agent configuration file. Contains identity fields plus ONLY the values that differ from the profile named in `extends`. Absence of a field means inherit, not unset.",
   "type": "object",
-  "required": ["schema_version", "extends", "name"],
+  "required": [
+    "schema_version",
+    "extends",
+    "name"
+  ],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "extends": {
       "type": "string",
@@ -25,44 +29,79 @@
       "type": "string",
       "description": "One line on what this agent does."
     },
-
     "identity_context": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "locale": { "type": "string" },
-        "domain": { "type": "string" },
+        "locale": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
         "audience": {
           "type": "string",
-          "enum": ["internal_team", "external_client", "technical", "non_technical", "mixed"]
+          "enum": [
+            "internal_team",
+            "external_client",
+            "technical",
+            "non_technical",
+            "mixed"
+          ]
         }
       }
     },
-
     "voice_style": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "tone_of_voice": { "type": "string" },
-        "persona": { "type": "string", "enum": ["none", "named"] },
-        "verbosity": { "type": "string", "enum": ["concise", "standard", "expansive"] },
+        "tone_of_voice": {
+          "type": "string"
+        },
+        "persona": {
+          "type": "string",
+          "enum": [
+            "none",
+            "named"
+          ]
+        },
+        "verbosity": {
+          "type": "string",
+          "enum": [
+            "concise",
+            "standard",
+            "expansive"
+          ]
+        },
         "formatting_conventions": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "headers": { "type": "boolean" },
-            "tables": { "type": "string", "enum": ["always", "when_useful", "never"] },
-            "code_blocks": { "type": "string" }
+            "headers": {
+              "type": "boolean"
+            },
+            "tables": {
+              "type": "string",
+              "enum": [
+                "always",
+                "when_useful",
+                "never"
+              ]
+            },
+            "code_blocks": {
+              "type": "string"
+            }
           }
         }
       }
     },
-
     "operating_constraints": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "model": { "type": "string" },
+        "model": {
+          "type": "string"
+        },
         "pattern": {
           "type": "string",
           "enum": [
@@ -79,86 +118,183 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "input_filtering": { "type": "boolean" },
-            "tool_use_limits": { "type": "string", "enum": ["default", "strict", "none"] },
-            "output_validation": { "type": "boolean" },
-            "human_in_the_loop": { "type": "boolean" }
+            "input_filtering": {
+              "type": "boolean"
+            },
+            "tool_use_limits": {
+              "type": "string",
+              "enum": [
+                "default",
+                "strict",
+                "none"
+              ]
+            },
+            "output_validation": {
+              "type": "boolean"
+            },
+            "human_in_the_loop": {
+              "type": "boolean"
+            }
           }
         },
         "evaluation_loop": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "enabled": { "type": "boolean" },
-            "reviewer": { "type": ["string", "null"] },
-            "max_cycles": { "type": "integer", "minimum": 1, "maximum": 20 }
+            "enabled": {
+              "type": "boolean"
+            },
+            "reviewer": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "max_cycles": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
           }
         },
         "permissions_scope": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Arrays here REPLACE the inherited value wholesale. To keep baseline tools and add one, list them all.",
+          "description": "Arrays here REPLACE the inherited value wholesale. To keep the baseline's capabilities and add one, list them all.",
           "properties": {
-            "filesystem": { "type": "string", "enum": ["workspace_only", "read_only", "full"] },
-            "tools": { "type": "array", "items": { "type": "string" } },
-            "external_calls": { "type": "boolean" }
+            "filesystem": {
+              "type": "string",
+              "enum": [
+                "workspace_only",
+                "read_only",
+                "full"
+              ]
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "file.read",
+                  "file.search",
+                  "file.write",
+                  "shell",
+                  "web.search",
+                  "web.fetch",
+                  "subagent"
+                ]
+              },
+              "description": "REPLACES the inherited list; does not append."
+            },
+            "web": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "allowed_domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "blocked_domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         },
-        "safety_compliance_profile": { "type": "string" },
+        "safety_compliance_profile": {
+          "type": "string"
+        },
         "cost_performance_budget": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "max_tokens_per_run": { "type": "integer", "minimum": 1 },
-            "latency_target_seconds": { "type": "integer", "minimum": 1 }
+            "max_tokens_per_run": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "latency_target_seconds": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         }
       }
     },
-
     "knowledge_memory": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "default_context_sources": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "REPLACES the inherited list; does not append."
         },
-        "memory_behaviour": { "type": "string", "enum": ["stateless", "persistent"] },
+        "memory_behaviour": {
+          "type": "string",
+          "enum": [
+            "stateless",
+            "persistent"
+          ]
+        },
         "context_management": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "tool_output_token_cap": { "type": "integer", "minimum": 1000 },
-            "clear_stale_tool_calls": { "type": "boolean" }
+            "tool_output_token_cap": {
+              "type": "integer",
+              "minimum": 1000
+            },
+            "clear_stale_tool_calls": {
+              "type": "boolean"
+            }
           }
         }
       }
     },
-
     "interop": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "output_format_contract": {
           "type": "string",
-          "enum": ["markdown", "json", "plain_text", "file"]
+          "enum": [
+            "markdown",
+            "json",
+            "plain_text",
+            "file"
+          ]
         },
-        "output_location": { "type": "string" },
-        "escalation_path": { "type": "string" }
+        "output_location": {
+          "type": "string"
+        },
+        "escalation_path": {
+          "type": "string"
+        }
       }
     },
-
     "steering": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "feedback_mode": { "type": "string", "enum": ["chat_and_bulk", "chat_only"] },
-        "bulk_feedback_file": { "type": "string" }
+        "feedback_mode": {
+          "type": "string",
+          "enum": [
+            "chat_and_bulk",
+            "chat_only"
+          ]
+        },
+        "bulk_feedback_file": {
+          "type": "string"
+        }
       }
     },
-
     "credentials": {
       "type": "object",
       "description": "Environment variable REFERENCES only. Never literal secret values.",
@@ -166,6 +302,15 @@
         "type": "string",
         "pattern": "^env:[A-Z_][A-Z0-9_]*$"
       }
+    },
+    "compose": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(role|routine)/[a-z][a-z0-9-]*$"
+      },
+      "default": [],
+      "description": "Library modules to inline into this agent's generated CLAUDE.md, as kind/name. Roles and routines only: a pattern is named by operating_constraints.pattern, and two ways to say the same thing is two ways to disagree. REPLACES the inherited list; never appends."
     }
   }
 }

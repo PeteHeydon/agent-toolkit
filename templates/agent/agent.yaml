@@ -4,15 +4,15 @@
 # omitted is inherited from the file named in `extends` at runtime.
 # A two-field override is perfectly valid.
 #
-# Precedence: baseline -> THIS FILE -> CLI flag -> in-session instruction
-#   - Higher wins for the field it sets, and only that field
-#   - Nested maps merge at the leaf; sibling keys survive
-#   - Arrays REPLACE wholesale, they do not append
+# Precedence: baseline -> THIS FILE -> CLI flag -> in-session instruction.
+# Arrays REPLACE wholesale, they never append: to keep the baseline's list and
+# add one entry, list them all. Full merge rules:
+#   docs/precedence-and-inheritance.md
 #
 # Never put a secret here. Reference env vars as env:VAR_NAME.
 # See docs/environment-variables.md in the toolkit.
 
-schema_version: 1
+schema_version: 2
 
 # What this agent inherits from. Explicit, not convention — so the agent is
 # self-describing, and so you can point it at a different baseline (work vs

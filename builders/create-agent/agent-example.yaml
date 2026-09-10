@@ -10,15 +10,15 @@
 # Written to:  <dest>/<agent-name>/agent.yaml
 #              default dest ~/.agent-toolkit/agents/
 #
-# Precedence:  baseline -> THIS FILE -> CLI flag -> in-session instruction
-#   - Higher wins for the field it sets, and only that field
-#   - Nested maps merge at the leaf; sibling keys survive
-#   - Arrays REPLACE wholesale, never append
+# Precedence:  baseline -> THIS FILE -> CLI flag -> in-session instruction.
+# Arrays REPLACE wholesale, they never append: to keep the baseline's list and
+# add one entry, list them all. Full merge rules:
+#   docs/precedence-and-inheritance.md
 #
 # NEVER put a secret here. Use env:VAR_NAME. See docs/environment-variables.md
 # ---------------------------------------------------------------------------
 
-schema_version: 1
+schema_version: 2
 
 # --- Required identity -----------------------------------------------------
 
@@ -82,9 +82,12 @@ description: "One line on what this agent does."
 #
 #   permissions_scope:
 #     filesystem: "read_only"              # workspace_only | read_only | full
-#     # NOTE: arrays REPLACE. To keep the baseline tools and add one, list them all.
-#     tools: ["read", "search"]
-#     external_calls: false
+#     # NOTE: arrays REPLACE. To keep the baseline's capabilities and add one,
+#     # list them all. Legal: file.read | file.search | file.write | shell
+#     #                     | web.search | web.fetch | subagent
+#     capabilities: ["file.read", "file.search", "web.search"]
+#     web:
+#       blocked_domains: ["internal.example.com"]   # needs web.fetch granted
 #
 #   safety_compliance_profile: "default"
 #
@@ -94,7 +97,7 @@ description: "One line on what this agent does."
 
 # knowledge_memory:
 #   default_context_sources:               # replaces the baseline list entirely
-#     - "skills/core"
+#     - "notes/house-style.md"
 #     - "skills/legal"
 #   memory_behaviour: "persistent"         # stateless | persistent
 #   context_management:

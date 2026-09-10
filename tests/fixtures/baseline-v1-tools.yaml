@@ -1,0 +1,31 @@
+# A valid schema_version 1 profile, using the v1 permissions vocabulary that
+# version 2 replaced. Used to prove the v2 validator names the replacement
+# rather than just rejecting the file, and by the migration tests in 4.5.
+schema_version: 1
+
+identity_context:
+  locale: "en-AU"
+  domain: "general"
+  audience: "internal_team"
+
+voice_style:
+  tone_of_voice: "neutral, direct"
+  persona: "none"
+  verbosity: "concise"
+
+operating_constraints:
+  model: "claude-sonnet-5"
+  pattern: "standalone"
+  guardrails:
+    input_filtering: true
+    tool_use_limits: "default"
+    output_validation: false
+    human_in_the_loop: false
+  permissions_scope:
+    filesystem: "workspace_only"
+    tools: ["read", "write", "search"]
+    external_calls: false
+
+interop:
+  output_format_contract: "markdown"
+  output_location: "./output"

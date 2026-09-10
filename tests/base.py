@@ -19,9 +19,26 @@ REPO_ROOT = os.path.dirname(TESTS_DIR)
 FIXTURES = os.path.join(TESTS_DIR, "fixtures")
 
 DETECT_SCRIPT = os.path.join(REPO_ROOT, "builders/bootstrap-agent/scripts/detect-profile.sh")
+DETECT_PY = os.path.join(REPO_ROOT, "builders/bootstrap-agent/scripts/detect-profile.py")
 VALIDATE_PROFILE_SCRIPT = os.path.join(REPO_ROOT, "builders/bootstrap-agent/scripts/validate-profile.py")
 VALIDATE_AGENT_SCRIPT = os.path.join(REPO_ROOT, "builders/create-agent/scripts/validate-agent.py")
 RESOLVE_SCRIPT = os.path.join(REPO_ROOT, "builders/create-agent/scripts/resolve-config.py")
+SCAFFOLD_SCRIPT = os.path.join(REPO_ROOT, "builders/create-agent/scripts/scaffold-agent.py")
+
+
+def as_yaml_path(path):
+    r"""
+    Render a filesystem path so it survives being substituted into a
+    double-quoted YAML scalar.
+
+    Every fixture placeholder lands inside `extends: "{{BASELINE}}"`. On
+    Windows a native path is `C:\Users\...`, and inside a double-quoted YAML
+    scalar `\U` starts an escape sequence — so the fixture fails to parse and
+    the test reports a resolver bug that isn't there. Forward slashes are
+    accepted by the resolver on both platforms (it runs every path through
+    os.path.abspath), so normalising here is a fix, not a workaround.
+    """
+    return str(path).replace("\\", "/")
 
 
 def load_fixture(name, **substitutions):
@@ -30,12 +47,14 @@ def load_fixture(name, **substitutions):
     reference a baseline or themselves (extends: "{{BASELINE}}", "{{SELF}}")
     can't bake in a real path — it only exists once a test copies them into
     its own tmpdir — so callers pass the resolved path in as a kwarg.
+
+    Every substitution is a path, so all of them go through as_yaml_path().
     """
     path = os.path.join(FIXTURES, name)
     with open(path, "r", encoding="utf-8") as fh:
         text = fh.read()
     for key, value in substitutions.items():
-        text = text.replace("{{%s}}" % key, value)
+        text = text.replace("{{%s}}" % key, as_yaml_path(value))
     return text
 
 
@@ -64,26 +83,50 @@ class ToolkitTestCase(unittest.TestCase):
     def write_baseline(self, fixture_name="baseline-valid.yaml"):
         return self.write("baseline.yaml", load_fixture(fixture_name))
 
-    def run_detect(self):
+    def run_detect(self, *args, **env_overrides):
+        """Through the bash wrapper — the interpreter-probe entry point."""
+        env = dict(self.env)
+        env.update(env_overrides)
         return subprocess.run(
-            ["bash", DETECT_SCRIPT], env=self.env, cwd=REPO_ROOT,
+            ["bash", DETECT_SCRIPT, *args], env=env, cwd=REPO_ROOT,
             capture_output=True, text=True,
         )
 
-    def run_validate_profile(self, path):
+    def run_detect_py(self, *args, **env_overrides):
+        """
+        The Python script directly, which is what the builders call.
+
+        Both entry points are tested because they can drift: the wrapper is
+        the only thing that can report a missing interpreter, and the .py is
+        the only thing that reads the profile.
+        """
+        env = dict(self.env)
+        env.update(env_overrides)
         return subprocess.run(
-            [sys.executable, VALIDATE_PROFILE_SCRIPT, path], env=self.env, cwd=REPO_ROOT,
+            [sys.executable, DETECT_PY, *args], env=env, cwd=REPO_ROOT,
             capture_output=True, text=True,
         )
 
-    def run_validate_agent(self, path):
+    def run_validate_profile(self, path, *args):
         return subprocess.run(
-            [sys.executable, VALIDATE_AGENT_SCRIPT, path], env=self.env, cwd=REPO_ROOT,
+            [sys.executable, VALIDATE_PROFILE_SCRIPT, path, *args], env=self.env, cwd=REPO_ROOT,
+            capture_output=True, text=True,
+        )
+
+    def run_validate_agent(self, path, *args):
+        return subprocess.run(
+            [sys.executable, VALIDATE_AGENT_SCRIPT, path, *args], env=self.env, cwd=REPO_ROOT,
             capture_output=True, text=True,
         )
 
     def run_resolve(self, *args):
         return subprocess.run(
             [sys.executable, RESOLVE_SCRIPT, *args], env=self.env, cwd=REPO_ROOT,
+            capture_output=True, text=True,
+        )
+
+    def run_scaffold(self, *args):
+        return subprocess.run(
+            [sys.executable, SCAFFOLD_SCRIPT, *args], env=self.env, cwd=REPO_ROOT,
             capture_output=True, text=True,
         )

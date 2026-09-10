@@ -1,7 +1,7 @@
-schema_version: 1
+schema_version: 2
 extends: "{{BASELINE}}"
 name: "probe"
 description: "Test probe."
 operating_constraints:
   permissions_scope:
-    tools: ["read"]
+    capabilities: ["file.read"]

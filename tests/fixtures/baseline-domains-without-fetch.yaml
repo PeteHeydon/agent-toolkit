@@ -1,0 +1,25 @@
+# A domain list that cannot take effect: web.fetch is not granted, so the
+# config looks like it bounds egress but does nothing.
+schema_version: 2
+
+identity_context:
+  locale: "en-AU"
+  domain: "general"
+  audience: "internal_team"
+
+voice_style:
+  tone_of_voice: "neutral, direct"
+  verbosity: "concise"
+
+operating_constraints:
+  model: "claude-sonnet-5"
+  pattern: "standalone"
+  permissions_scope:
+    filesystem: "read_only"
+    capabilities: ["file.read", "web.search"]
+    web:
+      allowed_domains: ["example.com"]
+
+interop:
+  output_format_contract: "markdown"
+  output_location: "./output"

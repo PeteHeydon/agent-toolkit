@@ -52,11 +52,15 @@ wrapper for a browser-based desktop experience without a CLI. See
 
 ### Builders
 
+This table is the single source of truth for what exists. `docs/vision.md`
+describes what builders are *for*; it does not track status, and neither does
+`TODO.md`.
+
 | Builder | Status |
 |---|---|
 | bootstrap-agent | Implemented |
 | create-agent | Implemented |
-| validation-agent | Stubbed (hooks in `validate-profile.py`, `validate-agent.py`) |
+| validation-agent | Implemented — `/validate-agent`; the rule-expressible checks live in `scripts/semantic_checks.py` |
 | design-agent | Planned |
 | agent-skills-agent | Planned |
 | doco-agent | Planned |
@@ -65,7 +69,7 @@ wrapper for a browser-based desktop experience without a CLI. See
 | agent-optimisation-agent | Planned |
 | agent-tool-agent | Planned |
 | agent-security-agent | Planned |
-| agent-refinement-agent | Planned |
+| agent-refinement-agent | Implemented — `/review-agent` proposes what to promote from `steering.md`; writes nothing |
 
 ## Verify
 
@@ -73,15 +77,31 @@ wrapper for a browser-based desktop experience without a CLI. See
 bash scripts/verify-toolkit.sh
 ```
 
+**On Windows:** use `python` or `py -3` wherever the docs say `python3` — the
+`python3` command is often the Microsoft Store stub rather than an interpreter.
+The pre-flight check above and the interpreter probe are the only bash in the
+toolkit and need Git Bash or WSL; everything in the path you actually walk is
+Python. See [`docs/getting-started.md`](docs/getting-started.md), "On Windows".
+
 ## Docs
 
 - [Getting started](docs/getting-started.md)
 - [Tutorial: your first agent](docs/tutorial-first-agent.md) — a worked example, start to finish
 - [Testing](docs/testing.md)
 - [Handoff brief](HANDOFF.md) — background and settled design decisions
-- [TODO](TODO.md) — outstanding work
+- [Architecture](docs/architecture.md) — how a config becomes a running agent
+- [Decisions](docs/decisions.md) — the design record, in full
+- [Backlog](TODO.md) — prioritised, numbered, in implementation order
 - [Repository structure](docs/repository-structure.md)
 - [Precedence & inheritance](docs/precedence-and-inheritance.md)
 - [Environment variables & secrets](docs/environment-variables.md)
 - [Vision](docs/vision.md)
 - [Agentic patterns research](docs/research/agentic-patterns-initial-summary.md)
+
+### Proposals
+
+Design work not yet accepted. Referenced by the backlog.
+
+- [Runtime contract](docs/proposals/runtime-contract.md) — how a resolved config becomes a running agent
+- [Module library](docs/proposals/module-library.md) — reusable behaviours composed into agents
+- [Local UI readiness](docs/proposals/local-ui-readiness.md) — what v1 must get right for a future GUI
